@@ -1,0 +1,16 @@
+<%- include('partials/header', { title: 'TinyLink — Stats' }) %>
+
+<section class="bg-white p-4 rounded shadow">
+  <h2 class="font-semibold mb-2">Stats for <code><%= link.code %></code></h2>
+  <div class="space-y-2">
+    <div><strong>Short URL:</strong> <a href="<%= baseUrl %>/<%= link.code %>" class="text-blue-600"><%= baseUrl %>/<%= link.code %></a></div>
+    <div><strong>Target URL:</strong> <a href="<%= link.target_url %>" class="underline" target="_blank" rel="noreferrer"><%= link.target_url %></a></div>
+    <div><strong>Clicks:</strong> <%= link.clicks %></div>
+    <div><strong>Last clicked:</strong> <%= link.last_clicked ? new Date(link.last_clicked).toLocaleString() : '-' %></div>
+    <div class="mt-4">
+      <a href="/" class="inline-block bg-gray-100 px-3 py-1 rounded">Back to dashboard</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

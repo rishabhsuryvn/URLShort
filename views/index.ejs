@@ -1,0 +1,51 @@
+<%- include('partials/header', { title: 'TinyLink — Dashboard' }) %>
+
+<section class="mb-6">
+  <form id="createForm" class="bg-white p-4 rounded shadow">
+    <div class="flex flex-col sm:flex-row gap-2">
+      <input id="target" name="target" placeholder="https://example.com/long" class="flex-1 border p-2 rounded" />
+      <input id="code" name="code" placeholder="Optional custom code (6-8 alnum)" class="w-60 border p-2 rounded" />
+      <button id="createBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
+    </div>
+    <div id="formMessage" class="mt-2 text-sm"></div>
+  </form>
+</section>
+
+<section>
+  <div class="bg-white p-4 rounded shadow">
+    <h2 class="font-semibold mb-2">Links</h2>
+    <div id="linksTable" class="overflow-auto">
+      <table class="w-full text-sm">
+        <thead class="text-left text-gray-600">
+          <tr>
+            <th class="p-2">Short</th>
+            <th class="p-2">Target</th>
+            <th class="p-2">Clicks</th>
+            <th class="p-2">Last clicked</th>
+            <th class="p-2">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!links || links.length === 0) { %>
+            <tr><td colspan="5" class="p-4 text-gray-500">No links yet.</td></tr>
+          <% } else { %>
+            <% links.forEach(function(link) { %>
+              <tr class="border-t">
+                <td class="p-2 align-top"><a class="text-blue-600" href="<%= baseUrl %>/<%= link.code %>"><%= link.code %></a></td>
+                <td class="p-2 truncate max-w-md"><a class="underline" href="<%= link.target_url %>" target="_blank" rel="noreferrer"><%= link.target_url %></a></td>
+                <td class="p-2"><%= link.clicks %></td>
+                <td class="p-2"><%= link.last_clicked ? new Date(link.last_clicked).toLocaleString() : '-' %></td>
+                <td class="p-2">
+                  <a href="/code/<%= link.code %>" class="mr-2 text-sm">Stats</a>
+                  <button data-code="<%= link.code %>" class="deleteBtn text-sm text-red-600">Delete</button>
+                </td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
