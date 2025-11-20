@@ -1,9 +1,9 @@
-// routes/web.js
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
+const { isValidCode, isValidURL } = require("../utils/validators");
 
-// Dashboard: /
+// Dashboard (GET /)
 router.get("/", async (req, res) => {
   try {
     const { rows } = await db.query(
@@ -16,7 +16,77 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Stats page: /code/:code
+// FORM handler: POST
+router.post("/links", async (req, res) => {
+  const target = req.body.target;
+  const code =
+    req.body.code && req.body.code.trim() ? req.body.code.trim() : undefined;
+
+  if (!target || !isValidURL(target)) {
+    return res.redirect("/?error=invalid_url");
+  }
+  if (code && !isValidCode(code)) {
+    return res.redirect("/?error=invalid_code");
+  }
+
+  try {
+    if (code) {
+      const { rows } = await db.query("SELECT code FROM links WHERE code=$1", [
+        code,
+      ]);
+      if (rows.length) return res.redirect("/?error=duplicate_code");
+    }
+
+    const generateCode = () => {
+      const chars =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      let out = "";
+      for (let i = 0; i < 7; i++)
+        out += chars[Math.floor(Math.random() * chars.length)];
+      return out;
+    };
+
+    let chosen = code;
+    if (!chosen) {
+      let attempts = 0;
+      do {
+        chosen = generateCode();
+        const r = await db.query("SELECT code FROM links WHERE code=$1", [
+          chosen,
+        ]);
+        if (r.rows.length === 0) break;
+        attempts++;
+      } while (attempts < 5);
+      if (attempts >= 5)
+        chosen = (
+          generateCode() + Math.floor(Math.random() * 90 + 10)
+        ).substring(0, 8);
+    }
+
+    await db.query("INSERT INTO links(code, target_url) VALUES($1, $2)", [
+      chosen,
+      target,
+    ]);
+    return res.redirect("/");
+  } catch (err) {
+    console.error("POST /links error", err);
+    return res.redirect("/?error=server");
+  }
+});
+
+// FORM handler: POST
+router.post("/links/:code/delete", async (req, res) => {
+  const { code } = req.params;
+  try {
+    await db.query("DELETE FROM links WHERE code=$1", [code]);
+    return res.redirect("/");
+  } catch (err) {
+    console.error("POST /links/:code/delete error", err);
+    return res.redirect("/?error=server");
+  }
+});
+
+// Stats page:
 router.get("/code/:code", async (req, res) => {
   const { code } = req.params;
   try {
@@ -33,7 +103,7 @@ router.get("/code/:code", async (req, res) => {
   }
 });
 
-// Redirect: /:code  (must be below explicit routes)
+// Redirect
 router.get("/:code", async (req, res) => {
   const { code } = req.params;
   try {
@@ -45,7 +115,6 @@ router.get("/:code", async (req, res) => {
       return res.status(404).render("404", { message: "Link not found" });
     }
     const target = rows[0].target_url;
-    // increment clicks and update last_clicked
     await db.query(
       "UPDATE links SET clicks = clicks + 1, last_clicked = now() WHERE code=$1",
       [code]

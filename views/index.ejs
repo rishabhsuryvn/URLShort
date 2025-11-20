@@ -1,13 +1,19 @@
 <%- include('partials/header', { title: 'TinyLink — Dashboard' }) %>
 
 <section class="mb-6">
-  <form id="createForm" class="bg-white p-4 rounded shadow">
+  <form id="createForm" method="post" action="/links" class="bg-white p-4 rounded shadow">
     <div class="flex flex-col sm:flex-row gap-2">
-      <input id="target" name="target" placeholder="https://example.com/long" class="flex-1 border p-2 rounded" />
+      <input id="target" name="target" placeholder="https://example.com/long/path" class="flex-1 border p-2 rounded" />
       <input id="code" name="code" placeholder="Optional custom code (6-8 alnum)" class="w-60 border p-2 rounded" />
       <button id="createBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Create</button>
     </div>
-    <div id="formMessage" class="mt-2 text-sm"></div>
+    <div id="formMessage" class="mt-2 text-sm">
+      <% if (typeof query !== 'undefined' && query && query.error) { %>
+        <span style="color:red">
+          <% if (query.error === 'invalid_url') { %>Invalid URL entered.<% } else if (query.error === 'invalid_code') { %>Invalid custom code.<% } else if (query.error === 'duplicate_code') { %>Code already exists.<% } else { %>Error occurred.<% } %>
+        </span>
+      <% } %>
+    </div>
   </form>
 </section>
 
@@ -37,7 +43,11 @@
                 <td class="p-2"><%= link.last_clicked ? new Date(link.last_clicked).toLocaleString() : '-' %></td>
                 <td class="p-2">
                   <a href="/code/<%= link.code %>" class="mr-2 text-sm">Stats</a>
-                  <button data-code="<%= link.code %>" class="deleteBtn text-sm text-red-600">Delete</button>
+
+                  <form method="post" action="/links/<%= link.code %>/delete" onsubmit="return confirm('Delete code <%= link.code %>?');" style="display:inline">
+                    <button type="submit" class="text-sm text-red-600">Delete</button>
+                  </form>
+
                 </td>
               </tr>
             <% }) %>

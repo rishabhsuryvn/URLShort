@@ -1,10 +1,9 @@
-// routes/apiLinks.js
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const { isValidCode, isValidURL } = require("../utils/validators");
 
-// POST /api/links  -> create link (409 if code exists)
+// POST
 router.post("/", async (req, res) => {
   const { target, code } = req.body;
   if (!target || !isValidURL(target)) {
@@ -16,7 +15,6 @@ router.post("/", async (req, res) => {
       .json({ error: "Invalid code format (A-Za-z0-9, 6-8 chars)" });
   }
 
-  // if no code provided, generate a random 7-char code
   const generateCode = () => {
     const chars =
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -29,7 +27,6 @@ router.post("/", async (req, res) => {
   try {
     let chosen = code;
     if (!chosen) {
-      // generate until unique (few attempts)
       let attempts = 0;
       do {
         chosen = generateCode();
@@ -40,14 +37,12 @@ router.post("/", async (req, res) => {
         if (rows.length === 0) break;
         attempts++;
       } while (attempts < 5);
-      // if still colliding, try longer
       if (attempts >= 5) {
         chosen =
           generateCode() + Math.floor(Math.random() * 90 + 10).toString();
         chosen = chosen.substring(0, 8);
       }
     } else {
-      // ensure code not taken
       const { rows } = await db.query("SELECT code FROM links WHERE code=$1", [
         chosen,
       ]);
@@ -67,7 +62,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// GET /api/links -> list all links
+// GET
 router.get("/", async (req, res) => {
   try {
     const result = await db.query(
@@ -80,7 +75,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// GET /api/links/:code -> stats for single code
+// GET
 router.get("/:code", async (req, res) => {
   const { code } = req.params;
   try {
@@ -97,7 +92,7 @@ router.get("/:code", async (req, res) => {
   }
 });
 
-// DELETE /api/links/:code -> delete link
+// DELETE
 router.delete("/:code", async (req, res) => {
   const { code } = req.params;
   try {

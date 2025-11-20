@@ -1,4 +1,3 @@
-// public/app.js
 const createForm = document.getElementById("createForm");
 const createBtn = document.getElementById("createBtn");
 const formMessage = document.getElementById("formMessage");
